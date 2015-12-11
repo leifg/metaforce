@@ -61,7 +61,7 @@ module Metaforce
     end
 
     def host
-      @host ||= 'login.salesforce.com'
+      @host ||= ENV["SALESFORCE_HOST"] || 'login.salesforce.com'
     end
 
     def authentication_handler
