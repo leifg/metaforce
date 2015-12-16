@@ -7,3 +7,4 @@ deploy.zip
 retrieve.zip
 test.rb
 .metaforce.yml
+.DS_Store
