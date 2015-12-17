@@ -95,7 +95,7 @@ module Metaforce
       @status ||= client.status(id)
     end
 
-    # Public: Returns true if the job has completed. 
+    # Public: Returns true if the job has completed.
     #
     # Examples
     #

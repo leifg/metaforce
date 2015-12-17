@@ -24,12 +24,7 @@ module Metaforce
 
     # Internal: The Savon client to send SOAP requests with.
     def client
-      @client ||= Savon.client(wsdl) do |wsdl|
-        wsdl.endpoint = endpoint
-      end.tap do |client|
-        client.config.soap_header = soap_headers
-        client.http.auth.ssl.verify_mode = :none
-      end
+      @client ||= Savon.client(wsdl: wsdl, endpoint: endpoint, soap_header: soap_headers, ssl_verify_mode: :none, log: true, log_level: :debug)
     end
 
     # Internal: Performs a SOAP request. If the session is invalid, it will
@@ -40,7 +35,7 @@ module Metaforce
       retries = authentication_retries
       begin
         perform_request(*args, &block)
-      rescue Savon::SOAP::Fault => e
+      rescue Savon::SOAPFault => e
         if e.message =~ /INVALID_SESSION_ID/ && authentication_handler && retries > 0
           authenticate!
           retries -= 1
@@ -51,7 +46,7 @@ module Metaforce
     end
 
     def perform_request(*args, &block)
-      response = client.request(*args, &block)
+      response = client.call(*args, &block)
       Hashie::Mash.new(response.body)[:"#{args[0]}_response"].result
     end
 
@@ -60,7 +55,6 @@ module Metaforce
     def authenticate!
       options = authentication_handler.call(self, @options)
       @options.merge!(options)
-      client.config.soap_header = soap_headers
     end
 
     # A proc object that gets called when the client needs to reauthenticate.
@@ -74,7 +68,7 @@ module Metaforce
 
     # Internal: Soap headers to set for authenticate.
     def soap_headers
-      { 'ins0:SessionHeader' => { 'ins0:sessionId' => session_id } }
+      { 'tns:SessionHeader' => { 'tns:sessionId' => session_id } }
     end
 
     # Internal: The session id, which can be obtained by calling

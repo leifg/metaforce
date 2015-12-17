@@ -9,12 +9,9 @@ module Metaforce
         #
         #   client._create(:apex_page, :full_name => 'TestPage', label: 'Test page', :content => '<apex:page>foobar</apex:page>')
         def _create(type, metadata={})
-          type = type.to_s.camelize
-          request :create do |soap|
-            soap.body = {
-              :metadata => prepare(metadata)
-            }.merge(attributes!(type))
-          end
+          soap_message = { metadata: prepare(metadata).merge(:"@xsi:type" => type.to_s.camelize) }
+
+          request(:create, message: soap_message, attributes: { xmlns: "http://soap.sforce.com/2006/04/metadata" })
         end
 
         # Public: Delete metadata
@@ -44,7 +41,7 @@ module Metaforce
               :metadata => {
                 :current_name => current_name,
                 :metadata => prepare(metadata),
-                :attributes! => { :metadata => { 'xsi:type' => "ins0:#{type}" } }
+                :attributes! => { :metadata => { 'xsi:type' => type } }
               }
             }
           end
@@ -65,21 +62,21 @@ module Metaforce
       private
 
         def attributes!(type)
-          {:attributes! => { 'ins0:metadata' => { 'xsi:type' => "ins0:#{type}" } }}
+          { 'xsi:type' => "#{type}" }
         end
 
         # Internal: Prepare metadata by base64 encoding any content keys.
         def prepare(metadata)
           metadata = Array[metadata].compact.flatten
           metadata.each { |m| encode_content(m) }
-          metadata
+          metadata.first
         end
 
         # Internal: Base64 encodes any :content keys.
         def encode_content(metadata)
           metadata[:content] = Base64.encode64(metadata[:content]) if metadata.has_key?(:content)
         end
-        
+
       end
     end
   end

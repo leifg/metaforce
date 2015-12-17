@@ -42,23 +42,21 @@ module Metaforce
         # type - either :deploy or :retrieve
         #
         # Examples
-        # 
+        #
         #   client.status('04sU0000000Wx6KIAS')
         #   #=> {:done=>true, :id=>"04sU0000000Wx6KIAS", :state=>"Completed", ...}
         def status(ids, type=nil)
           method = :check_status
           method = :"check_#{type}_status" if type
           ids = [ids] unless ids.respond_to?(:each)
-          request method do |soap|
-            soap.body = { :ids => ids }
-          end
+          request method, message: { :ids => ids }
         end
 
         # Public: Deploy code to Salesforce.
         #
         # zip_file - The base64 encoded contents of the zip file.
         # options  - Hash of DeployOptions.
-        # 
+        #
         # Returns the AsyncResult
         def _deploy(zip_file, options={})
           request :deploy do |soap|
